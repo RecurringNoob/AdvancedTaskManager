@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TO DO LISTS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --accent-color: #4a4aff;
+            --success-color: #00d8a7;
+            --danger-color: #ff4d4d;
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+body.light-mode {
+    --bg-primary: #f4f4f8;
+    --bg-secondary: #ffffff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #555;
+    --accent-color: #4a4aff;
+    --success-color: #00b38f;
+    --danger-color: #ff3333;
+}
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+          transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(var(--bg-secondary), 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            transition: background-color var(--transition-speed);
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: color var(--transition-speed);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text-primary);
+        }
+
+        .task-sections {
+            margin-top: 100px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 0 15px;
+        }
+
+        .section-header h2 {
+            font-size: 22px;
+            color: var(--accent-color);
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 0 15px;
+        }
+
+        .task-card {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            position: relative;
+            overflow: hidden;
+            cursor: move;
+           transition: background-color var(--transition-speed), transform var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .task-card.dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+        }
+
+        .task-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .task-priority {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .task-priority.high { background-color: var(--danger-color); }
+        .task-priority.medium { background-color: orange; }
+        .task-priority.low { background-color: var(--success-color); }
+
+        .task-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity var(--transition-speed);
+            margin-right: 5px;
+        }
+
+        .btn-complete {
+            background-color: var(--success-color);
+            color: var(--bg-primary);
+        }
+
+        .btn-delete {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-edit {
+            background-color: var(--text-secondary);
+            color: var(--bg-primary);
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .task-add-form, .task-edit-modal {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-primary);
+            border: 1px solid rgba(160, 160, 176, 0.2);
+            border-radius: 8px;
+            color: var(--text-primary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color var(--transition-speed);
+        }
+
+        .submit-btn:hover {
+            background-color: #3030ff;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 50px 0;
+        }
+
+        .task-edit-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            z-index: 1100;
+            display: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: none;
+        }
+body.light-mode .navbar {
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+body.light-mode .task-card {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+    </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container navbar-content">
+        <div class="logo">TO DO LISTS</div>
+        <div class="nav-links">
+            <a href="#add-task"><i class="fas fa-plus-circle"></i> Add Task</a>
+            <a href="#ongoing-tasks"><i class="fas fa-tasks"></i> Ongoing</a>
+            <a href="#completed-tasks"><i class="fas fa-check-circle"></i> Completed</a>
+            <a href="#missed-tasks"><i class="fas fa-exclamation-triangle"></i> Missed</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container task-sections">
+    <section id="add-task">
+        <div class="task-add-form">
+            <div class="section-header">
+                <h2>Create New Task</h2>
+            </div>
+            <form id="task-form">
+                <div class="form-group">
+                    <label>Task Title</label>
+                    <input type="text" name="task-name" class="form-control" placeholder="Enter task title" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="task-description" class="form-control" placeholder="Optional task description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" name="task-date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select name="task-priority" class="form-control" required>
+                        <option value="">Select Priority</option>
+                        <option value="high">High Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="low">Low Priority</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Create Task</button>
+            </form>
+        </div>
+    </section>
+
+    <section id="ongoing-tasks">
+        <div class="section-header">
+            <h2>Ongoing Tasks</h2>
+        </div>
+        <div class="task-grid" id="ongoing-task-grid">
+            <!-- Ongoing tasks will be dynamically added here -->
+        </div>
+    </section>
+
+    <section id="completed-tasks">
+        <div class="section-header">
+            <h2>Completed Tasks</h2>
+        </div>
+        <div class="task-grid" id="completed-task-grid">
+            <!-- Completed tasks will be dynamically added here -->
+        </div>
+    </section>
+
+    <section id="missed-tasks">
+        <div class="section-header">
+            <h2>Missed Tasks</h2>
+        </div>
+        <div class="task-grid" id="missed-task-grid">
+            <!-- Missed tasks will be dynamically added here -->
+        </div>
+    </section>
+</div>
+
+<div class="modal-overlay" id="modal-overlay"></div>
+<div class="task-edit-modal" id="task-edit-modal">
+    <div class="section-header">
+        <h2>Edit Task</h2>
+    </div>
+    <form id="edit-task-form">
+        <input type="hidden" id="edit-task-id">
+        <div class="form-group">
+            <label>Task Title</label>
+            <input type="text" id="edit-task-name" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="edit-task-description" class="form-control"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Due Date</label>
+            <input type="date" id="edit-task-date" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Priority</label>
+            <select id="edit-task-priority" class="form-control" required>
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+            </select>
+        </div>
+        <button type="submit" class="submit-btn">Update Task</button>
+        <button type="button" class="submit-btn" id="cancel-edit">Cancel</button>
+    </form>
+</div>
+
+    <script>
+class TaskManager {
+    constructor() {
+        // Initialize task collections
+        this.ongoingTasks = [];
+        this.completedTasks = [];
+        this.missedTasks = [];
+
+        // Set up event listeners and initial load
+        this.initEventListeners();
+        this.loadTasksFromLocalStorage();
+        this.startTaskScheduler();
+        this.initDragAndDrop();
+       this.initNotifications();
+      this.initDarkModeToggle();
+    }
+
+    // Initialize event listeners for task interactions
+    initEventListeners() {
+        // Task submission form
+        const taskForm = document.getElementById('task-form');
+        const editForm = document.getElementById('edit-task-form');
+        const cancelEditBtn = document.getElementById('cancel-edit');
+        const modalOverlay = document.getElementById('modal-overlay');
+
+        // Null checks to prevent potential errors
+        if (taskForm) {
+            taskForm.addEventListener('submit', this.handleTaskSubmission.bind(this));
+        }
+
+        if (editForm) {
+            editForm.addEventListener('submit', this.handleTaskUpdate.bind(this));
+        }
+
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', this.closeEditModal.bind(this));
+        }
+
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', this.closeEditModal.bind(this));
+        }
+
+        // Event delegation for task actions
+        const taskGrids = [
+            document.getElementById('ongoing-task-grid'),
+            document.getElementById('completed-task-grid'),
+            document.getElementById('missed-task-grid')
+        ];
+
+        taskGrids.forEach(grid => {
+            if (grid) {
+                grid.addEventListener('click', this.handleTaskActions.bind(this));
+            }
+        });
+    }
+
+    // Drag and Drop Functionality
+    initDragAndDrop() {
+        const grids = [
+            document.getElementById('ongoing-task-grid'),
+            document.getElementById('completed-task-grid'),
+            document.getElementById('missed-task-grid')
+        ];
+
+        grids.forEach(grid => {
+            if (grid) {
+                grid.addEventListener('dragstart', this.handleDragStart.bind(this));
+                grid.addEventListener('dragover', this.handleDragOver.bind(this));
+                grid.addEventListener('drop', this.handleDrop.bind(this));
+                grid.addEventListener('dragend', this.handleDragEnd.bind(this));
+            }
+        });
+    }
+
+    handleDragStart(event) {
+        const taskCard = event.target.closest('.task-card');
+        if (taskCard) {
+            taskCard.classList.add('dragging');
+            event.dataTransfer.setData('text/plain', taskCard.dataset.taskId);
+            event.dataTransfer.setData('text/grid', event.target.closest('.task-grid').id);
+        }
+    }
+
+    handleDragOver(event) {
+        event.preventDefault();
+    }
+
+    handleDrop(event) {
+        event.preventDefault();
+        const taskId = parseInt(event.dataTransfer.getData('text/plain'));
+        const sourceGridId = event.dataTransfer.getData('text/grid');
+        const targetGrid = event.target.closest('.task-grid');
+
+        if (targetGrid && targetGrid.id !== sourceGridId) {
+            this.moveTaskBetweenGrids(taskId, sourceGridId, targetGrid.id);
+        }
+    }
+
+    handleDragEnd(event) {
+        const taskCard = event.target.closest('.task-card');
+        if (taskCard) {
+            taskCard.classList.remove('dragging');
+        }
+    }
+
+    moveTaskBetweenGrids(taskId, sourceGridId, targetGridId) {
+        const gridMappings = {
+            'ongoing-task-grid': this.ongoingTasks,
+            'completed-task-grid': this.completedTasks,
+            'missed-task-grid': this.missedTasks
+        };
+
+        const sourceArray = gridMappings[sourceGridId];
+        const targetArray = gridMappings[targetGridId];
+
+        if (!sourceArray || !targetArray) return;
+
+        const taskIndex = sourceArray.findIndex(t => t.id === taskId);
+        if (taskIndex !== -1) {
+            const task = sourceArray.splice(taskIndex, 1)[0];
+            
+            // Update timestamps based on target grid
+            if (targetGridId === 'completed-task-grid') {
+                task.completedAt = new Date().toISOString();
+            } else if (targetGridId === 'missed-task-grid') {
+                task.missedAt = new Date().toISOString();
+            }
+
+            targetArray.push(task);
+            this.updateLocalStorage();
+            this.renderTables();
+        }
+    }
+
+    // Handle task submission
+    async handleTaskSubmission(event) {
+        event.preventDefault();
+        
+        try {
+            const task = this.validateAndCreateTask();
+            await this.createTask(task);
+        } catch (error) {
+            this.displayErrorMessage(error.message);
+        }
+    }
+
+    validateAndCreateTask() {
+        const form = document.getElementById('task-form');
+        const formData = new FormData(form);
+
+        const name = formData.get('task-name').trim();
+        const description = formData.get('task-description').trim();
+        const date = formData.get('task-date');
+        const priority = formData.get('task-priority');
+
+        // Validation checks
+        if (!name) throw new Error('Task name is required');
+        if (!date) throw new Error('Due date is required');
+        if (!priority) throw new Error('Priority is required');
+
+        // Check date is in the future
+        const currentDate = new Date().setHours(0, 0, 0, 0);
+        const inputDate = new Date(date).setHours(0, 0, 0, 0);
+
+        if (inputDate < currentDate) {
+            throw new Error('Date should be in the future');
+        }
+
+        return { 
+            id: Date.now(), 
+            name, 
+            description, 
+            date, 
+            priority,
+            createdAt: new Date().toISOString()
+        };
+    }
+
+    async createTask(task) {
+        // Simulate async task creation
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        this.ongoingTasks.push(task);
+        this.sortTasksByPriority();
+        this.updateLocalStorage();
+        this.renderTables();
+        this.resetForm();
+    }
+
+    sortTasksByPriority() {
+        const priorityOrder = { high: 1, medium: 2, low: 3 };
+        this.ongoingTasks.sort((a, b) => 
+            priorityOrder[a.priority] - priorityOrder[b.priority]
+        );
+    }
+
+    // Start periodic task status check
+    startTaskScheduler() {
+        this.taskSchedulerInterval = setInterval(() => {
+            this.checkTasksStatus();
+             this.scheduleTaskNotifications(); 
+        }, 60000); // Check every minute
+    }
+
+    // Stop task scheduler (useful for cleanup)
+    stopTaskScheduler() {
+        if (this.taskSchedulerInterval) {
+            clearInterval(this.taskSchedulerInterval);
+        }
+    }
+
+    // Check and update task statuses
+    checkTasksStatus() {
+        const currentDate = new Date().setHours(0, 0, 0, 0);
+
+        // Move overdue tasks to missed tasks
+        const overdueTasksCount = this.ongoingTasks.reduce((count, task) => {
+            const taskDate = new Date(task.date).setHours(0, 0, 0, 0);
+            
+            if (taskDate < currentDate) {
+                task.missedAt = new Date().toISOString();
+                this.missedTasks.push(task);
+                return count + 1;
+            }
+            return count;
+        }, 0);
+
+        // Remove missed tasks from ongoing
+        this.ongoingTasks = this.ongoingTasks.filter(
+            task => new Date(task.date).setHours(0, 0, 0, 0) >= currentDate
+        );
+
+        // Update storage and UI
+        this.updateLocalStorage();
+        this.renderTables();
+
+        return overdueTasksCount;
+    }
+
+    // Handle task actions (complete/delete/edit)
+    handleTaskActions(event) {
+        const target = event.target;
+        const taskCard = target.closest('.task-card');
+        
+        if (!taskCard) return;
+
+        const taskId = parseInt(taskCard.dataset.taskId);
+
+        if (target.classList.contains('btn-complete')) {
+            this.completeTask(taskId);
+        } else if (target.classList.contains('btn-delete')) {
+            this.deleteTask(taskId);
+        } else if (target.classList.contains('btn-edit')) {
+            this.openEditModal(taskId);
+        }
+    }
+
+    // Mark task as completed
+    completeTask(taskId) {
+        const taskIndex = this.ongoingTasks.findIndex(task => task.id === taskId);
+        
+        if (taskIndex !== -1) {
+            const completedTask = this.ongoingTasks.splice(taskIndex, 1)[0];
+            completedTask.completedAt = new Date().toISOString();
+            this.completedTasks.push(completedTask);
+
+            this.updateLocalStorage();
+            this.renderTables();
+        }
+    }
+
+    // Delete a task
+    deleteTask(taskId) {
+        const tasks = [this.ongoingTasks, this.completedTasks, this.missedTasks];
+        
+        tasks.forEach(taskList => {
+            const index = taskList.findIndex(task => task.id === taskId);
+            if (index !== -1) {
+                taskList.splice(index, 1);
+            }
+        });
+        
+        this.updateLocalStorage();
+        this.renderTables();
+    }
+
+    // Open edit modal for a specific task
+    openEditModal(taskId) {
+        const task = this.findTaskById(taskId);
+        
+        if (!task) return;
+
+        const editModal = document.getElementById('task-edit-modal');
+        const modalOverlay = document.getElementById('modal-overlay');
+
+        const editTaskId = document.getElementById('edit-task-id');
+        const editTaskName = document.getElementById('edit-task-name');
+        const editTaskDescription = document.getElementById('edit-task-description');
+        const editTaskDate = document.getElementById('edit-task-date');
+        const editTaskPriority = document.getElementById('edit-task-priority');
+
+        if (editModal && modalOverlay) {
+            editTaskId.value = task.id;
+            editTaskName.value = task.name;
+            editTaskDescription.value = task.description || '';
+            editTaskDate.value = task.date;
+            editTaskPriority.value = task.priority;
+
+            editModal.style.display = 'block';
+            modalOverlay.style.display = 'block';
+        }
+    }
+
+    // Close edit modal
+    closeEditModal() {
+        const editModal = document.getElementById('task-edit-modal');
+        const modalOverlay = document.getElementById('modal-overlay');
+
+        if (editModal && modalOverlay) {
+            editModal.style.display = 'none';
+            modalOverlay.style.display = 'none';
+        }
+    }
+
+    // Handle task update from edit modal
+    handleTaskUpdate(event) {
+        event.preventDefault();
+        
+        const taskId = parseInt(document.getElementById('edit-task-id').value);
+        const name = document.getElementById('edit-task-name').value.trim();
+        const description = document.getElementById('edit-task-description').value.trim();
+        const date = document.getElementById('edit-task-date').value;
+        const priority = document.getElementById('edit-task-priority').value;
+
+        const task = this.findTaskById(taskId);
+
+        if (task) {
+            task.name = name;
+            task.description = description;
+            task.date = date;
+            task.priority = priority;
+
+            this.updateLocalStorage();
+            this.renderTables();
+            this.closeEditModal();
+        }
+    }
+
+    // Find task by ID across all task lists
+    findTaskById(taskId) {
+        const allTasks = [...this.ongoingTasks, ...this.completedTasks, ...this.missedTasks];
+        return allTasks.find(task => task.id === taskId);
+    }
+
+    // Render task grids
+    renderTables() {
+        this.renderTaskGrid(this.ongoingTasks, 'ongoing-task-grid');
+        this.renderTaskGrid(this.completedTasks, 'completed-task-grid');
+        this.renderTaskGrid(this.missedTasks, 'missed-task-grid');
+    }
+
+    // Render individual task grid
+    renderTaskGrid(tasks, gridId) {
+        const grid = document.getElementById(gridId);
+        
+        if (!grid) return;
+
+        if (tasks.length === 0) {
+            grid.innerHTML = this.getEmptyStateHTML(gridId);
+            return;
+        }
+
+        grid.innerHTML = tasks.map(task => this.createTaskCardHTML(task, gridId)).join('');
+    }
+
+    // Create task card HTML
+    createTaskCardHTML(task, gridId) {
+        const actionButtons = gridId === 'ongoing-task-grid' 
+            ? `
+                <button class="btn btn-complete">Complete</button>
+                <button class="btn btn-edit">Edit</button>
+            ` 
+            : '';
+
+        return `
+            <div class="task-card" 
+                 data-task-id="${task.id}" 
+                 draggable="true">
+                <div class="task-priority ${task.priority}"></div>
+                <h3>${task.name}</h3>
+                <p>${task.description || 'No description'}</p>
+                <div class="task-meta">
+                    <span><i class="fas fa-calendar"></i> ${task.date}</span>
+                    <span class="task-priority-text">${task.priority.toUpperCase()} Priority</span>
+                </div>
+                <div class="task-actions">
+                    ${actionButtons}
+                    <button class="btn btn-delete">Delete</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Get empty state HTML
+    getEmptyStateHTML(gridId) {
+        const emptyStates = {
+            'ongoing-task-grid': {
+                icon: 'fas fa-clipboard-list',
+                message: 'No ongoing tasks. Start by creating a new task!'
+            },
+            'completed-task-grid': {
+                icon: 'fas fa-check-circle',
+                message: 'No completed tasks yet.'
+            },
+            'missed-task-grid': {
+                icon: 'fas fa-exclamation-triangle',
+                message: 'No missed tasks.'
+            }
+        };
+
+        const state = emptyStates[gridId];
+        return `
+            <div class="empty-state">
+                <i class="${state.icon}" style="font-size: 50px; margin-bottom: 20px;"></i>
+                <p>${state.message}</p>
+            </div>
+        `;
+    }
+
+    // Update local storage with current task lists
+    updateLocalStorage() {
+        localStorage.setItem('ongoingTasks', JSON.stringify(this.ongoingTasks));
+        localStorage.setItem('completedTasks', JSON.stringify(this.completedTasks));
+        localStorage.setItem('missedTasks', JSON.stringify(this.missedTasks));
+    }
+
+    // Load tasks from local storage on page load
+    loadTasksFromLocalStorage() {
+        this.ongoingTasks = JSON.parse(localStorage.getItem('ongoingTasks') || '[]');
+        this.completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+        this.missedTasks = JSON.parse(localStorage.getItem('missedTasks') || '[]');
+        
+        this.renderTables();
+    }
+
+    // Display error message
+    displayErrorMessage(message) {
+        const errorContainer = document.getElementById('error-message');
+        if (errorContainer) {
+            errorContainer.textContent = message;
+            setTimeout(() => errorContainer.textContent = '', 3000);
+        }
+    }
+
+    // Reset form after task submission
+    resetForm() {
+        const form = document.getElementById('task-form');
+        if (form) form.reset();
+    }
+initNotifications() {
+    // Check if browser supports notifications
+    if (!('Notification' in window)) {
+        console.log('This browser does not support desktop notifications');
+        return;
+    }
+
+    // Request notification permission
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            console.log('Notification permission granted');
+        } else if (permission === 'denied') {
+            console.log('Notification permission denied');
+        } else {
+            console.log('Notification permission default');
+        }
+    }).catch(error => {
+        console.error('Error requesting notification permission:', error);
+    });
+}
+
+// Schedule task notifications
+scheduleTaskNotifications() {
+    // Check if notifications are supported and permission is granted
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+        console.log('Notifications not supported or permission denied');
+        return;
+    }
+
+    const now = new Date();
+    this.ongoingTasks.forEach(task => {
+        const taskDate = new Date(task.date);
+        
+        // Calculate time difference
+        const timeDiff = taskDate.getTime() - now.getTime();
+        const hoursBeforeTask = 24; // Notify 24 hours before task
+        const millisecondsBeforeTask = hoursBeforeTask * 60 * 60 * 1000;
+        
+        // Check if the notification should be sent
+        if (timeDiff > 0 && timeDiff <= millisecondsBeforeTask) {
+            try {
+                // Create notification
+                new Notification(`Upcoming Task: ${task.name}`, {
+                    body: `Your task is due on ${task.date}. Priority: ${task.priority}`,
+                    // Removed icon path as it might cause issues
+                });
+            } catch (error) {
+                console.error('Error creating notification:', error);
+            }
+        }
+    });
+}
+
+
+// Initialize dark mode toggle
+initDarkModeToggle() {
+    // Create dark mode toggle button
+    const darkModeToggle = document.createElement('button');
+    darkModeToggle.innerHTML = '🌓 Toggle Dark/Light Mode';
+    darkModeToggle.classList.add('dark-mode-toggle');
+    
+    // Style the toggle button
+    darkModeToggle.style.position = 'fixed';
+    darkModeToggle.style.bottom = '20px';
+    darkModeToggle.style.right = '20px';
+    darkModeToggle.style.zIndex = '1200';
+    darkModeToggle.style.padding = '10px';
+    darkModeToggle.style.backgroundColor = 'var(--accent-color)';
+    darkModeToggle.style.color = 'white';
+    darkModeToggle.style.border = 'none';
+    darkModeToggle.style.borderRadius = '8px';
+    darkModeToggle.style.cursor = 'pointer';
+
+    // Add to body
+    document.body.appendChild(darkModeToggle);
+
+    // Load saved theme
+    this.loadTheme();
+
+    // Add event listener
+    darkModeToggle.addEventListener('click', () => this.toggleTheme());
+}
+
+// Toggle between dark and light themes
+toggleTheme() {
+    document.body.classList.toggle('light-mode');
+    
+    // Save preference
+    const theme = document.body.classList.contains('light-mode') ? 'light' : 'dark';
+    localStorage.setItem('theme', theme);
+}
+
+// Load saved theme
+loadTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+    }
+}
+}
+
+// Initialize TaskManager when DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new TaskManager();
+});
+    </script>
+</body>
+</html>
